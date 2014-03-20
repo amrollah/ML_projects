@@ -1,0 +1,45 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage[pdfborder={1 1 1}]{hyperref}
+
+% Lengths and indenting
+\setlength{\textwidth}{16.5cm}
+\setlength{\marginparwidth}{1.5cm}
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.15cm}
+\setlength{\textheight}{22cm}
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\topmargin}{0cm}
+\setlength{\headheight}{0cm}
+\setlength{\headsep}{0cm}
+
+\renewcommand{\familydefault}{\sfdefault}
+
+\title{Machine Learning 2013: Project 1 - Regression Report}
+\author{rabeehk@student.ethz.ch\\ robing@student.ethz.ch\\ aseifodd@student.ethz.ch\\ }
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Experimental Protocol}
+For reproducing our results, one should use the code.m file beside this report and put the \textit{training.csv} and \textit{testing.csv} file next to it. By running the code.m file in MATLAB, if you have all the default MATLAB features, the program will learn a linear regression based on data provided in \textit{training.csv} file and produce a \textbf{\textit{yPred.txt}} file next to itself which contains all the predications for \textit{testing.csv} input.
+
+\section{Tools}
+We only used MATLAB for this project. Besides general features and functions of MATLAB we utilized ridge function from Curve-Fitting toolbox. The source code is uploaded in the submission system.
+
+\section{Algorithm}
+We used the ridge regression algorithm for regressing the data. For simplicity reasons, we just used the built-in \textbf{\textit{ridge}} MATLAB function. Then, we estimated a range for $\lambda$ parameter of ridge regression and exploited cross validation on each possible parameter value. At the end, we use the parameter with least average error rate for determining weights of predicts.
+
+\section{Features}
+Most of our effort in the project was focused in this part. We realized that relationship of some features is completely non-linear with respect to y. So, we tried some transformations including $sqrt, log2, log, exp, 1/x$ on those features and also on y. It turned out that \textit{$sqrt(y)$} is a good transformation for the output. So, we use \textit{square root} for the training and \textbf{power} for transforming the y predications to real data. Besides transforming y, we added the $log2(data)$ and $sqrt(data)$ of all feature to our feature set, mainly because most of the features are powers of 2 or step-wise increments. So, we hope that getting $log2$ or $sqrt$ straighten their curvature. For determining which transform is better for a specific original feature or y, we used \textit{corr} function in MATLAB to get an rough idea on how linearly correlated the new feature is with respect to y. Then we choose the transformations with high correlation. In our case, they were $log$ and $sqrt$.  We also tried to  consider interaction between features, so we decided to used \textit{x2fx} function of MATLAB to produce every possible multiplication of original features and also their power 2 and add them to our feature set. Of course we eliminated the constant vector added to our features by this \textit{x2fx} function. After integrating all these feature, we will have a very large feature set which we should select best features out of it. So, we used a MATLAB function named \textit{stepwisefit} to rule out every feature that does not contribute enough to a linear regression toward y. We provide this function with our feature set, the y values and a \textit{inmodel} parameter which indicates which feature is in the initial feature set. We initialize this function with all features and the algorithm will drop out non-correlated features in each step until converge to a final set. There are two parameters called \textit{penter} and \textit{premve} which control how features are dropped and therefore, affect the size of result features set. We used default values for these parameters, as they produce the best result. This algorithm interestingly might add features that were removed in some previous steps and this feature is useful in our case, because decrease the chance of trapping in local optimum. At the end, our feature space is reduced drastically by \textit{stepwisefit} function and the most relevant features for linear regression are selected. Therefore, we use these features for learning the ridge regression parameters. 
+
+\section{Parameters}
+We have one  parameter in our learning algorithm and it is the $\lambda$ of ridge regression. We used cross validation over the range of $[0, 20e-3]$ with step sizes as $1e-5$. Our cross validation is 10 fold, but the results with other reasonable fold numbers like 5-12 were not much different. The \textit{stepwisefit} has two parameters which we didn't change them from default. They are\textit{penter} and \textit{premove}. We used try and failure approach to select best value for these two parameters. Finally we realized that default values produce the best result for us.
+
+\section{Lessons Learned} 
+We tried several transformation on the data as well as y, but most of them didn't improve the result. For example, some transformations like $ex(data), 1/data, exp(y), 1/y, y.^2, data.^-2$ had bad effects on regression result. We interpret this as the curvature between that specific data and y was on some shape that this transformation just improved it's curvature instead of straightening non-linearity. We learned that \textbf{\textit{sequentialfs}} which is general purpose feature selection algorithm, does not work well in our case. We guess this is because of the specific dropping criteria which it use for eliminating features. Furthermore, it cannot add features which were removed earlier. Therefore, it is more prone to trapping in local optimum and losing some precious features. Furthermore, it is really slow at runtime. So, we can safely say that for linear regression feature selection if our criteria is least square error, the \textit{stepwisefit} function is a better choice than \textit{sequentialfs}.  
+
+\end{document} 
